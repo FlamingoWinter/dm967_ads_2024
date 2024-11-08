@@ -2,3 +2,6 @@ requests~=2.32.3
 PyYAML~=6.0.2
 setuptools~=68.2.0
 PyMySQL~=1.1.1
+pandas~=2.2.3
+folium~=0.18.0
+haversine~=2.8.1
