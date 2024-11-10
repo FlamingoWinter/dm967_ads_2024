@@ -1,4 +1,4 @@
-import csv
+from datetime import datetime, timedelta
 
 import pandas as pd
 import pymysql
@@ -62,37 +62,124 @@ def run_query(conn, query):
         return pd.DataFrame(rows, columns=columns)
 
 
+def run_query(conn, query):
+    with conn.cursor() as cur:
+        cur.execute(query)
+        if query.strip().lower().startswith(("select", "show")):
+            rows = cur.fetchall()
+            columns = [desc[0] for desc in cur.description]
+            return pd.DataFrame(rows, columns=columns)
+
+        elif query.strip().lower().startswith(
+                ("delete", "insert", "update", "drop", "create", "alter", "kill")
+        ):
+            conn.commit()
+            return cur.rowcount
+
+        else:
+            return None
+
+
+def kill_all_processes(conn):
+    try:
+        with conn.cursor() as cursor:
+            cursor.execute("SHOW PROCESSLIST")
+            processes = cursor.fetchall()
+            for process in processes:
+                process_id = process[0]
+                user = process[1]
+                command = process[4]
+                if command != 'Sleep':
+                    cursor.execute(f"KILL {process_id}")
+                    print(f"Killed process {process_id} (user: {user}, command: {command})")
+        conn.commit()
+
+    except Exception as e:
+        print(f"Error occurred: {e}")
+
+
 def housing_upload_join_data(conn, year):
-    cur = conn.cursor()
+    print(f'Selecting data for year: {year}')
 
-    print('Selecting data for year: ' + str(year))
+    start_date = datetime(year, 1, 1)
+    end_date = datetime(year, 12, 31)
 
-    cur.execute(
-            f"SELECT COUNT(*) FROM prices_coordinates_data WHERE YEAR(date_of_transfer) = {year}"
-    )
-    result = cur.fetchone()
-    if result[0] > 0:
-        print("Data for this year is already inserted")
-        return
+    current_date = start_date
+    while current_date <= end_date:
+        with conn.cursor() as cur:
+            day_str = current_date.strftime('%Y-%m-%d')
+            cur.execute(
+                    f"""
+                SELECT 1
+                FROM prices_coordinates_data
+                WHERE `date_of_transfer`  = '{day_str}'
+                LIMIT 1
+                """
+            )
+            result = cur.fetchone()
+            if result:
+                print(f"Data for {day_str} is already inserted")
+            else:
+                cur.execute(
+                        f"""
+                    SELECT pp.price, pp.date_of_transfer, po.postcode, pp.property_type, pp.new_build_flag,
+                           pp.tenure_type, pp.locality, pp.town_city, pp.district, pp.county, po.country, 
+                           po.latitude, po.longitude, pp.primary_addressable_object_name
+                    FROM (
+                        SELECT price, date_of_transfer, postcode, property_type, new_build_flag, tenure_type, 
+                               locality, town_city, district, county, primary_addressable_object_name
+                        FROM pp_data 
+                        WHERE date_of_transfer BETWEEN '{day_str} 00:00:00' AND '{day_str} 23:59:59'
+                    ) AS pp
+                    INNER JOIN postcode_data AS po ON pp.postcode = po.postcode
+                    """
+                )
+                rows = cur.fetchall()
 
-    start_date = str(year) + "-01-01"
-    end_date = str(year) + "-12-31"
+                if rows:
+                    insert_query = """
+                        INSERT INTO prices_coordinates_data (
+                            price, date_of_transfer, postcode, property_type, new_build_flag,
+                            tenure_type, locality, town_city, district, county, country, 
+                            latitude, longitude, primary_addressable_object_name
+                        ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    """
+                    cur.executemany(insert_query, rows)
+                    conn.commit()
+                    print(f'Data stored for day: {day_str}')
+                else:
+                    print(f"No data found for {day_str}")
 
-    cur.execute(
-            f'SELECT pp.price, pp.date_of_transfer, po.postcode, pp.property_type, pp.new_build_flag, pp.tenure_type, pp.locality, pp.town_city, pp.district, pp.county, po.country, po.latitude, po.longitude, pp.primary_addressable_object_name FROM (SELECT price, date_of_transfer, postcode, property_type, new_build_flag, tenure_type, locality, town_city, district, county, primary_addressable_object_name FROM pp_data WHERE date_of_transfer BETWEEN "' + start_date + '" AND "' + end_date + '") AS pp INNER JOIN postcode_data AS po ON pp.postcode = po.postcode'
-    )
-    rows = cur.fetchall()
+        # Move to the next day
+        current_date += timedelta(days=1)
 
-    csv_file_path = 'output_file.csv'
+    print(f"Data upload complete for year: {year}")
 
-    # Write the rows to the CSV file
-    with open(csv_file_path, 'w', newline='') as csvfile:
-        csv_writer = csv.writer(csvfile)
-        # Write the data rows
-        csv_writer.writerows(rows)
-    print('Storing data for year: ' + str(year))
-    cur.execute(
-            f"LOAD DATA LOCAL INFILE '" + csv_file_path + "' INTO TABLE `prices_coordinates_data` FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED by '\"' LINES STARTING BY '' TERMINATED BY '\n';"
-    )
-    conn.commit()
-    print('Data stored for year: ' + str(year))
+
+def print_tables_summary(conn):
+    tables = run_query(conn, "SHOW Tables");
+    table_names = tables.iloc[:, 0]
+
+    for table_name in table_names:
+        print(f"\nTable: {table_name}")
+
+        table_status = run_query(conn, f"SHOW TABLE STATUS LIKE '{table_name}';")
+        if not table_status.empty:
+            approx_row_count = table_status.iloc[0]['Rows']
+            print(f"\nApproximate Row Count: {approx_row_count / 1_000_000:.1f} M"
+                  )
+        else:
+            print("\nUnable to fetch row count")
+
+        first_5_rows = run_query(conn, f"SELECT * FROM `{table_name}` LIMIT 5;")
+        print(first_5_rows)
+
+        indices = run_query(conn, f"SHOW INDEX FROM `{table_name}`");
+        if not indices.empty:
+            print("\nIndices:")
+            for _, index in indices.iterrows():
+                print(
+                        f" - Index: {index['Key_name']} ({index['Index_type']}), Column: {index['Column_name']}"
+                )
+        else:
+            print("\nNo indices set on this table.")
