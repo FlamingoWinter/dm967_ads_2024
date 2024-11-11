@@ -2,9 +2,23 @@ from datetime import datetime, timedelta
 
 import requests
 
-# This file accesses the data
+from sql import *
 
-"""Place commands in this file to access the data electronically. Don't remove any missing values, or deal with outliers. Make sure you have legalities correct, both intellectual property and personal data privacy rights. Beyond the legal side also think about the ethical issues around this data. """
+
+def run_query(conn, query):
+    run_query(conn, query)
+
+
+def kill_all_processes(conn):
+    kill_all_processes(conn)
+
+
+def print_tables_summary(conn):
+    print_tables_summary(conn)
+
+
+def create_connection(user, password, host, database, port=3306):
+    create_connection(user, password, host, database, port)
 
 
 def data():
