@@ -11,3 +11,4 @@ scipy~=1.14.1
 scikit-learn~=1.5.2
 fynesse~=0.1.0
 python-dotenv~=1.0.1
+branca~=0.8.0

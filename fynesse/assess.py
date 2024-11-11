@@ -1,3 +1,6 @@
+import math
+
+import branca
 import folium
 import pandas as pd
 import seaborn as sns
@@ -202,3 +205,149 @@ def plot_locations_from_df(df, zoom_start=10):
     df.apply(create_circle_for_row, axis=1)
 
     return m
+
+
+def match_houses(pp_data, osm_data):
+    pp_data = pp_data.rename(columns={
+            "postcode": "postcode"
+    }
+    )
+
+    osm_data = osm_data.rename(columns={
+            "addr:housenumber": "housenumber",
+            "addr:postcode"   : "postcode"
+    }
+    )
+
+    pp_data["housenumber"] = pp_data["primary_addressable_object_name"].str.extract(r'(\d+)'
+                                                                                    ).fillna('')
+
+    pp_data["housenumber"] = pp_data["housenumber"].str.lower()
+    pp_data["postcode"] = pp_data["postcode"].str.lower()
+    osm_data["housenumber"] = osm_data["housenumber"].astype(str).str.lower()
+    osm_data["postcode"] = osm_data["postcode"].astype(str).str.lower()
+
+    matched_houses = pd.merge(
+            pp_data,
+            osm_data,
+            on=["housenumber", "postcode"],
+            how="inner",
+            suffixes=('_pp', '_osm')
+    )
+
+    return matched_houses
+
+
+def expand_osm_house_ranges(osm_data):
+    expanded_rows = []
+
+    for _, row in osm_data.iterrows():
+        housenumber = str(row['addr:housenumber'])
+        if '-' in housenumber:
+            try:
+                start, end = map(int, housenumber.split('-'))
+                if end - start > 100:
+                    raise ValueError()
+                for number in range(start, end + 1):
+                    new_row = row.copy()
+                    new_row['addr:housenumber'] = str(number)
+                    row['osm_house_range'] = housenumber
+                    expanded_rows.append(new_row)
+            except ValueError:
+                row['osm_house_range'] = housenumber
+                expanded_rows.append(row)
+        else:
+            row['osm_house_range'] = housenumber
+            expanded_rows.append(row)
+        expanded_osm_data = pd.DataFrame(expanded_rows)
+
+    return expanded_osm_data
+
+
+def select_postcodes_in_box(connection, latitude, longitude, region_distance_km):
+    half_region_distance_km = region_distance_km / 2
+    max_lat = latitude + half_region_distance_km / DEGREE_KM_RATIO
+    min_lat = latitude - half_region_distance_km / DEGREE_KM_RATIO
+    max_lng = longitude + half_region_distance_km / DEGREE_KM_RATIO
+    min_lng = longitude - half_region_distance_km / DEGREE_KM_RATIO
+
+    query = f"""
+    SELECT postcode FROM postcode_data
+      WHERE latitude BETWEEN {min_lat} AND {max_lat}
+        AND longitude BETWEEN {min_lng} AND {max_lng}
+  """
+
+    return access.run_query(connection, query)
+
+
+def pp_houses_from_postcode(connection, postcodes):
+    dfs = []
+    for i, postcode in enumerate(postcodes["postcode"]):
+        query = f"""
+          SELECT * FROM pp_data
+            WHERE postcode = '{postcode}'
+        """
+        dfs.append(access.run_query(connection, query))
+    return pd.concat(dfs, ignore_index=True)
+
+
+def plot_prices(houses_df, price_col="price", log=True):
+    map_center = [houses_df['latitude'].mean(), houses_df['longitude'].mean()]
+    folium_map = folium.Map(location=map_center, zoom_start=12)
+
+    max_price = math.log(houses_df[price_col].max()) if log else houses_df[price_col].max()
+    min_price = math.log(houses_df[price_col].min()) if log else houses_df[price_col].min()
+    colormap = branca.colormap.LinearColormap(
+            colors=['blue', 'red'],
+            vmin=min_price, vmax=max_price
+    ).to_step(n=10)
+
+    for _, row in houses_df.iterrows():
+        price = row[price_col]
+        latitude = row['latitude']
+        longitude = row['longitude']
+
+        color = colormap(math.log(price) if log else price)
+
+        folium.CircleMarker(
+                location=(latitude, longitude),
+                radius=7,
+                color=color,
+                fill=True,
+                fill_opacity=0.9,
+                popup=f"""
+            {"Price" if price_col == "price" else price_col}: ${price:,.2f}\n\n
+            Name:{row['primary_addressable_object_name']}\n\n
+            Date Sold:{row['date_of_transfer']}\n\n
+            {row['housenumber']} {row['addr:street']} {row['postcode']}
+            """,
+        ).add_to(folium_map)
+
+    folium_map.add_child(colormap)
+
+    return folium_map
+
+
+def adjust_for_inflation(houses_df):
+    houses_df['date_of_transfer_date'] = pd.to_datetime(houses_df['date_of_transfer'])
+    houses_df['year'] = houses_df['date_of_transfer_date'].dt.year
+    cpi_df = pd.read_csv(
+            "https://raw.githubusercontent.com/FlamingoWinter/ads_practicals/refs/heads/main/cpi.csv"
+    )
+    cpi_df.rename(columns={'Title': 'year'}, inplace=True)
+    houses_df = houses_df.merge(cpi_df, on='year', how='left')
+    houses_df["price_adjusted"] = houses_df["price"] / houses_df[
+        "CPI"] * 128.6  # current CPI (or 2023's because that's the last one ONS had data for)
+    return houses_df
+
+
+def get_matched_houses(connection, latitude, longitude, region_distance_km=2.0):
+    buildings = get_pois_near_coordinates(latitude, longitude, {"building": True},
+                                          region_distance_km
+                                          )
+    expanded_buildings = expand_osm_house_ranges(buildings)
+
+    postcodes = select_postcodes_in_box(connection, latitude, longitude, region_distance_km)
+    houses = pp_houses_from_postcode(connection, postcodes)
+
+    return match_houses(houses, expanded_buildings)
