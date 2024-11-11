@@ -2,23 +2,23 @@ from datetime import datetime, timedelta
 
 import requests
 
-from sql import *
+from fynesse import sql
 
 
 def run_query(conn, query):
-    run_query(conn, query)
+    sql.run_query(conn, query)
 
 
 def kill_all_processes(conn):
-    kill_all_processes(conn)
+    sql.kill_all_processes(conn)
 
 
 def print_tables_summary(conn):
-    print_tables_summary(conn)
+    sql.print_tables_summary(conn)
 
 
 def create_connection(user, password, host, database, port=3306):
-    create_connection(user, password, host, database, port)
+    sql.create_connection(user, password, host, database, port)
 
 
 def data():
