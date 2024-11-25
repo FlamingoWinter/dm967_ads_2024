@@ -2,24 +2,6 @@ from datetime import datetime, timedelta
 
 import requests
 
-from fynesse import sql
-
-
-def run_query(conn, query):
-    return sql.run_query(conn, query)
-
-
-def kill_all_processes(conn):
-    return sql.kill_all_processes(conn)
-
-
-def print_tables_summary(conn):
-    return sql.print_tables_summary(conn)
-
-
-def create_connection(user, password, host, database, port=3306):
-    return sql.create_connection(user, password, host, database, port)
-
 
 def data():
     """Read the data from the web or local file, returning structured format such as a data frame"""

@@ -27,7 +27,7 @@ def fetch_2021_census_data(
 
     try:
         return pd.read_csv(f'{extract_dir}/census2021-{code.lower()}-{level}.csv')
-    except:
+    except FileNotFoundError:
         raise FileNotFoundError(
                 f"File not found in download. Data may not exist for the {level} level"
         )
