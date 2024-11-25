@@ -7,7 +7,7 @@ from . import db
 
 def initialise_database(db_name: str, user: str, password: str, host: str, port: int = 3306) -> \
         Connection | None:
-    conn = db.create_connection(user=user, password=password, host=host, port=port)
+    conn = db.create_connection(user=user, password=password, host=host, port=port, database=None)
     cursor = conn.cursor()
     cursor.execute(f"CREATE DATABASE IF NOT EXISTS {db_name}")
     conn = db.create_connection(user=user, password=password, host=host, database=db_name,

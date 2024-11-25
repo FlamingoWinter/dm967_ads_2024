@@ -22,6 +22,7 @@ def create_connection(user: str, password: str, host: str, database: Union[str, 
                                    host=host,
                                    port=port,
                                    local_infile=1,
+                                   db=database
                                    )
         print(f"Connection established!")
     except Exception as e:
