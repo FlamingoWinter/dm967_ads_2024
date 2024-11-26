@@ -53,4 +53,8 @@ def fetch_2021_census_geography(
         with open(path, 'wb') as f:
             f.write(response.content)
 
-    return gpd.read_file(path)
+    gdf = gpd.read_file(path)
+    gpd.read_file(path)
+    gdf = gdf.set_geometry('geometry')
+
+    return gdf
