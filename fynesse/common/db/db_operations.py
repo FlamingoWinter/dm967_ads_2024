@@ -1,3 +1,4 @@
+import geopandas as gpd
 import pandas as pd
 from pandas.io.sql import get_schema
 from pymysql import Connection
@@ -8,15 +9,39 @@ from db_setup import abort_deletion_if_table_exists
 def upload_to_database(conn: Connection, table_name: str, df: pd.DataFrame):
     cursor = conn.cursor()
 
+    is_geodf = isinstance(df, gpd.GeoDataFrame)
+
+    cursor.execute("SHOW TABLES")
+    tables = [row[0] for row in cursor.fetchall()]
+    if table_name in tables:
+        delete_confirmation = input(
+                f"Table '{table_name}' already exists. Do you want to dellete the table and recreate it? (y/n): "
+        ).strip().lower()
+        if delete_confirmation in ["y", "yes"]:
+            clear_table_query = f"DROP TABLE {table_name}"
+            print(f"Deleting table '{table_name}'...")
+            cursor.execute(clear_table_query)
+        else:
+            print("Aborting upload.")
+            return
+
     schema = get_schema(df, table_name)
     create_table_query = (schema
                           .replace("CREATE TABLE", "CREATE TABLE IF NOT EXISTS", 1)
                           .replace('"', '`'))
-    print(create_table_query)
+
+    if is_geodf:
+        create_table_query = create_table_query.replace(
+                "`geometry` VARCHAR(255)", "`geometry` GEOMETRY"
+        )
 
     cursor.execute(create_table_query)
 
     placeholders = ", ".join(["%s"] * len(df.columns))
+
+    if is_geodf:
+        df["geometry"] = df["geometry"].apply(lambda geom: geom.wkt if geom else None)
+
     columns = ', '.join([f"`{col}`" for col in df.columns])
     insert_query = f"INSERT INTO {table_name} ({columns}) VALUES ({placeholders})"
 
