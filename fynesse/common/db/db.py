@@ -64,3 +64,21 @@ def print_tables_summary(conn):
                 )
         else:
             print("\nNo indices set on this table.")
+
+
+def abort_deletion_if_table_exists(connection, table_name):
+    cursor = connection.cursor()
+    cursor.execute("SHOW TABLES")
+    tables = [row[0] for row in cursor.fetchall()]
+    if table_name in tables:
+        delete_confirmation = input(
+                f"Table '{table_name}' already exists. Do you want to dellete the table and recreate it? (y/n): "
+        ).strip().lower()
+        if delete_confirmation in ["y", "yes"]:
+            clear_table_query = f"DROP TABLE {table_name}"
+            print(f"Deleting table '{table_name}'...")
+            cursor.execute(clear_table_query)
+        else:
+            print("Aborting upload.")
+            return True
+    return False
