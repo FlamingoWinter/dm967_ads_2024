@@ -10,3 +10,15 @@ def clean_sexual_orientation(raw_sexual_orientation):
     sexual_orientation.columns = ["Geography", "Geography_Code", "Heterosexual", "Gay_or_Lesbian",
                                   "Bisexual", "Other", "Not_Answered"]
     return sexual_orientation
+
+
+def clean_geography_oa(raw_geography_oa):
+    geography_oa = raw_geography_oa.drop(raw_geography_oa.columns[[0, 2, 4, 5, 6, 9]], axis=1)
+    geography_oa.columns = ["Geography_Code", "Geography", "lat", "lng", "geometry"]
+    return geography_oa
+
+
+def clean_geography_msoa(raw_geography_msoa):
+    geography_msoa = raw_geography_msoa.drop(raw_geography_msoa.columns[[0, 3, 4, 5, 8]], axis=1)
+    geography_msoa.columns = ["Geography_Code", "Geography", "lat", "lng", "geometry"]
+    return geography_msoa
