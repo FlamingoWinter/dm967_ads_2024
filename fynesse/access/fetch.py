@@ -3,6 +3,7 @@ import os
 import zipfile
 from typing import Literal
 
+import geopandas as gpd
 import pandas as pd
 import requests
 
@@ -35,15 +36,15 @@ def fetch_2021_census_data(
 
 def fetch_2021_census_geography(
         level: Literal['msoa', 'oa'] = 'msoa'
-) -> pd.DataFrame:
+) -> gpd.GeoDataFrame:
     url_by_level = {
-            'oa'  : "https://open-geography-portalx-ons.hub.arcgis.com/api/download/v1/items/6beafcfd9b9c4c9993a06b6b199d7e6d/csv?layers=0",
-            'msoa': "https://open-geography-portalx-ons.hub.arcgis.com/api/download/v1/items/61ff711e89ba4c24ae5dc8a487e422a8/csv?layers=0"
+            'oa'  : "https://open-geography-portalx-ons.hub.arcgis.com/api/download/v1/items/6beafcfd9b9c4c9993a06b6b199d7e6d/geojson?layers=0",
+            'msoa': "https://open-geography-portalx-ons.hub.arcgis.com/api/download/v1/items/61ff711e89ba4c24ae5dc8a487e422a8/geojson?layers=0"
     }
     url = url_by_level[level]
 
     extract_dir = os.path.join(DATA_DIRECTORY, "census2021-geography")
-    path = os.path.join(extract_dir, f"census2021-{level}.csv")
+    path = os.path.join(extract_dir, f"census2021-{level}.geojson")
 
     if not (os.path.exists(path)):
         os.makedirs(extract_dir, exist_ok=True)
@@ -52,4 +53,4 @@ def fetch_2021_census_geography(
         with open(path, 'wb') as f:
             f.write(response.content)
 
-    return pd.read_csv(path)
+    return gpd.read_file(path)

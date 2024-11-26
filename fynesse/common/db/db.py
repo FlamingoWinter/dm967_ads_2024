@@ -1,38 +1,4 @@
-from typing import Union
-
 import pandas as pd
-import pymysql
-
-
-def create_connection(user: str, password: str, host: str, database: Union[str, None],
-                      port: int = 3306
-                      ):
-    conn = None
-    try:
-        if database is None:
-            conn = pymysql.connect(user=user,
-                                   passwd=password,
-                                   host=host,
-                                   port=port,
-                                   local_infile=1,
-                                   )
-        else:
-            conn = pymysql.connect(user=user,
-                                   passwd=password,
-                                   host=host,
-                                   port=port,
-                                   local_infile=1,
-                                   db=database
-                                   )
-        print(f"Connection established!")
-    except Exception as e:
-        print(f"Error connecting to the MariaDB Server: {e}")
-    return conn
-
-
-def create_database(conn, db):
-    cursor = conn.cursor()
-    cursor.execute(f"CREATE DATABASE IF NOT EXISTS {db}")
 
 
 def run_query(conn, query):
