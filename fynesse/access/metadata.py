@@ -12,4 +12,4 @@ def check_previous_upload(connection, pipeline_name):
 
 
 def update_metadata(connection, pipeline_name):
-    db_setup.update_metadata(connection, "practical 1")
+    db_setup.update_metadata(connection, pipeline_name)
