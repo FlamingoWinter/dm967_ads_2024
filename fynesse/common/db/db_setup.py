@@ -15,6 +15,7 @@ def initialise_database(db_name: str, user: str, password: str, host: str, port:
     conn = create_connection(user=user, password=password, host=host, database=db_name,
                              port=port
                              )
+    print(f"Connection established!")
     return conn
 
 
@@ -38,7 +39,6 @@ def create_connection(user: str, password: str, host: str, database: Union[str, 
                                    local_infile=1,
                                    db=database
                                    )
-        print(f"Connection established!")
     except Exception as e:
         print(f"Error connecting to the MariaDB Server: {e}")
     return conn
