@@ -58,7 +58,7 @@ def create_metadata_table(conn: Connection):
     run_query(conn, create_query)
 
 
-def check_previous_upload(connection, pipeline_name):
+def check_previous_pipeline(connection, pipeline_name, expected_minutes=None):
     check_query = f"""
     SELECT last_upload_time
     FROM upload_metadata 
@@ -76,15 +76,17 @@ def check_previous_upload(connection, pipeline_name):
 
     if last_upload_time:
         print(f"Previous {pipeline_name} was performed on {last_upload_time}.")
+        if expected_minutes:
+            print(f"Pipeline is expected to take {str(expected_minutes)} minutes")
         user_input = input("Do you want to proceed with the pipeline? (y/n): "
                            ).strip().lower()
         if user_input in ['y', 'yes']:
             return True
         else:
-            print("Aborting upload.")
+            print("Aborting pipeline.")
             return False
     else:
-        print("No previous upload found. Proceeding with the upload.")
+        print("No previous upload found. Proceeding with the pipeline.")
         return True
 
 
