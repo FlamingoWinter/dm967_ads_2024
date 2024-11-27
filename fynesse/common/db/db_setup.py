@@ -62,7 +62,7 @@ def check_previous_upload(connection, pipeline_name):
     check_query = f"""
     SELECT last_upload_time
     FROM upload_metadata 
-    WHERE pipeline_name = {pipeline_name}
+    WHERE pipeline_name = '{pipeline_name}'
     LIMIT 1;
     """
 
