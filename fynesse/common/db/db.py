@@ -82,3 +82,23 @@ def abort_deletion_if_table_exists(connection, table_name):
             print("Aborting upload.")
             return True
     return False
+
+
+def column_exists(connection, table_name, column_name):
+    cursor = connection.cursor()
+
+    check_query = f"""
+    SELECT COUNT(*)
+    FROM information_schema.columns
+    WHERE table_schema = DATABASE()
+    AND table_name = '{table_name}'
+    AND column_name = '{column_name}';
+    """
+
+    cursor.execute(check_query)
+    return cursor.fetchone()[0] != 0
+
+
+def add_key(conn, table_name):
+    if not column_exists(conn, table_name, "id"):
+        run_query(conn, f"ALTER TABLE {table_name} ADD COLUMN id INT AUTO_INCREMENT PRIMARY KEY;")
