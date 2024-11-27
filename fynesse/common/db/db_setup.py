@@ -4,7 +4,7 @@ from typing import Union
 import pymysql
 from pymysql import Connection
 
-from fynesse.common.db.db import abort_deletion_if_table_exists, run_query
+from ..db.db import abort_deletion_if_table_exists, run_query
 
 
 def initialise_database(db_name: str, user: str, password: str, host: str, port: int = 3306) -> \

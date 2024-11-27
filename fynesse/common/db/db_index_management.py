@@ -1,4 +1,4 @@
-from db import run_query
+from ..db.db import run_query
 
 
 def index_exists(connection, table_name, index_name):

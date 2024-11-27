@@ -3,7 +3,7 @@ import pandas as pd
 from pandas.io.sql import get_schema
 from pymysql import Connection
 
-from db import abort_deletion_if_table_exists
+from ..db.db import abort_deletion_if_table_exists
 
 
 def upload_to_database(conn: Connection, table_name: str, df: pd.DataFrame):
