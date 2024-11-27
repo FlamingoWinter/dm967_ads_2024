@@ -72,7 +72,7 @@ def check_previous_upload(connection, pipeline_name):
     if not query_result.empty:
         last_upload_time = query_result.iloc[0]["last_upload_time"]
     else:
-        return None
+        last_upload_time = None
 
     if last_upload_time:
         print(f"Previous {pipeline_name} was performed on {last_upload_time}.")
