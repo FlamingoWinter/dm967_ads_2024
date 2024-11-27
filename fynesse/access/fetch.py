@@ -1,5 +1,6 @@
 import io
 import os
+import time
 import zipfile
 from typing import Literal
 
@@ -47,9 +48,23 @@ def fetch_2021_census_geography(
     path = os.path.join(extract_dir, f"census2021-{level}.geojson")
 
     if not (os.path.exists(path)):
+        pending = True
+        
+        while pending:
+            pending = False
+            response = requests.get(url)
+            response.raise_for_status()
+
+            try:
+                data = response.json()
+                if data.get("status") == "Pending":
+                    print("File not ready. Retrying.")
+                    time.sleep(1)
+                    pending = True
+            except ValueError:
+                pass
+
         os.makedirs(extract_dir, exist_ok=True)
-        response = requests.get(url)
-        response.raise_for_status()
         with open(path, 'wb') as f:
             f.write(response.content)
 
