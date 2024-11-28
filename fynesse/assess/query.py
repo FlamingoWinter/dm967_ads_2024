@@ -16,7 +16,8 @@ def database_df_to_gpd(df, geometry_column_name="geometry"):
             lambda x: wkt.loads(x) if pd.notnull(x) else None
     )
     df = gpd.GeoDataFrame(df, geometry=geometry_column_name, crs="EPSG:27700")
-    return df.to_crs("EPSG:4326", inplace=True)
+    df.to_crs("EPSG:4326", inplace=True)
+    return df
 
 
 def random_sample(connection, table_name, sample_number):
