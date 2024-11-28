@@ -36,7 +36,13 @@ def get_pois(tags, polygon=None, lat=None, lng=None, radius_around_point=False, 
             pois = ox.features_from_point((lat, lng), tags, dist=distance_km * 1000)
         else:
             pois = ox.features_from_polygon(polygon, tags)
+
+        if pois is not None and not pois.empty:
+            pois['centroid'] = pois['geometry'].apply(lambda x: x.centroid)
+            pois['lat'] = pois['centroid'].apply(lambda x: x.y)
+            pois['lng'] = pois['centroid'].apply(lambda x: x.x)
+            pois.drop(columns=['centroid'], inplace=True)
         return pois
-    except InsufficientResponseError as e:
+    except Exception as e:
         # InsufficientResponseError
         return None
