@@ -62,8 +62,6 @@ def join_tables(connection, table1, table2, on, joined_table_name):
       JOIN {table2} t2 ON t1.{on} = t2.{on};
   """
 
-    print(join_query)
-
     cursor = connection.cursor()
 
     cursor.execute(join_query)
