@@ -50,8 +50,6 @@ def fit_linear_model_with_design_matrix(xs, y, alpha=0, L1_wt=0, feature_names=N
     m = sm.OLS(y, xs_design)
     fit_m = m.fit_regularized(alpha=alpha, L1_wt=L1_wt)
 
-    coefficients = fit_m.params
-
     fit_m.scaler = scaler
     fit_m.to_design_matrix = to_design_matrix
     return fit_m
