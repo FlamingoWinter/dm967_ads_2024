@@ -7,7 +7,7 @@ from pymysql import Connection
 def run_query(connection: Connection, query: str, args=None, execute_many: bool = False
               ) -> Union[pd.DataFrame, None, int]:
     with connection.cursor() as cursor:
-        cursor.execute(query, args) if not execute_many else cursor.execute_many(query, args)
+        cursor.execute(query, args) if not execute_many else cursor.executemany(query, args)
 
         if query.strip().lower().startswith(("select", "show")):
             rows = cursor.fetchall()
