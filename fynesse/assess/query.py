@@ -8,7 +8,7 @@ from shapely import wkt
 from fynesse.common.db import db
 
 
-def run_query(conn, query, args=None, execute_many=None):
+def run_query(conn, query, args=None, execute_many=False):
     return db.run_query(conn, query, args, execute_many)
 
 
