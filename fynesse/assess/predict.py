@@ -59,7 +59,7 @@ def predict(model, xs):
     return model.predict(xs_design)
 
 
-def k_fold(xs, y, alpha=0, L1_wt=0, n_splits=10, to_design_matrix=None):
+def k_fold(xs, y, alpha=0, L1_wt=0, n_splits=10, to_design_matrix=None, report=True):
     kf = KFold(n_splits=n_splits, shuffle=True)
     mses = []
     r2s = []
@@ -81,6 +81,10 @@ def k_fold(xs, y, alpha=0, L1_wt=0, n_splits=10, to_design_matrix=None):
         r2s.append(r2)
 
     avg_r2 = np.mean(r2s)
-    print(f"Average r2: {avg_r2}")
     avg_mse = np.mean(mses)
-    print(f"Average mse: {avg_mse}")
+
+    if report:
+        print(f"Average r2: {avg_r2}")
+        print(f"Average mse: {avg_mse}")
+
+    return avg_r2, avg_mse
