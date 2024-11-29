@@ -30,11 +30,13 @@ def fit_linear_model(xs, y, alpha=0, L1_wt=0, feature_names=None):
     fit_m.scaler = scaler
     fit_m.to_design_matrix = to_design_matrix
 
+    features = fit_m.features
+
     def to_features():
-        return fit_m.features
+        return features
 
     fit_m.to_features = to_features
-    
+
     return fit_m
 
 
