@@ -29,7 +29,12 @@ def fit_linear_model(xs, y, alpha=0, L1_wt=0, feature_names=None):
     print(coefficients_df)
     fit_m.scaler = scaler
     fit_m.to_design_matrix = to_design_matrix
-    fit_m.features = list(xs.columns)
+
+    def to_features():
+        return fit_m.features
+
+    fit_m.to_features = to_features
+    
     return fit_m
 
 
@@ -51,7 +56,11 @@ def fit_linear_model_with_design_matrix(xs, y, alpha=0, L1_wt=0, feature_names=N
 
     fit_m.scaler = scaler
     fit_m.to_design_matrix = to_design_matrix
-    fit_m.features = list(xs.columns)
+
+    def to_features():
+        return fit_m.features
+
+    fit_m.to_features = to_features
     return fit_m
 
 
