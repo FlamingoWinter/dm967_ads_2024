@@ -10,8 +10,6 @@ def fit_linear_model(xs, y, alpha=0, L1_wt=0, feature_names=None):
     def to_design_matrix(xs):
         return xs
 
-    m = sm.OLS(y, xs)
-
     scaler = StandardScaler()
     xs_normalised = scaler.fit_transform(xs)
     xs_design = to_design_matrix(xs_normalised)

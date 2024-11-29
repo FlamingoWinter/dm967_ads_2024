@@ -47,9 +47,10 @@ def fetch_2021_census_geography(
     extract_dir = os.path.join(DATA_DIRECTORY, "census2021-geography")
     path = os.path.join(extract_dir, f"census2021-{level}.geojson")
 
-    if not (os.path.exists(path)):
+    if not os.path.exists(path):
         pending = True
-        
+
+        response = None
         while pending:
             pending = False
             response = requests.get(url)

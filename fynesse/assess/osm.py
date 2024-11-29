@@ -18,7 +18,7 @@ def amend_df_with_pois_counts(df, tags: dict, distance_km: float = 1.0,
                 pois = ox.features_from_polygon(polygon, tags)
             return {tag: len(pois[pois[tag].notnull()]) for tag in tags}
 
-        except InsufficientResponseError as e:
+        except InsufficientResponseError:
             # InsufficientResponseError
             return {tag: 0 for tag in tags}
 

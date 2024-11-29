@@ -1,27 +1,34 @@
+from typing import Union
+
 import pandas as pd
+from pymysql import Connection
 
 
-def run_query(conn, query):
-    with conn.cursor() as cur:
-        cur.execute(query)
+def run_query(connection: Connection, query: str, args=None, execute_many: bool = False
+              ) -> Union[pd.DataFrame, None, int]:
+    with connection.cursor() as cursor:
+        cursor.execute(query, args) if not execute_many else cursor.execute_many(query, args)
+
         if query.strip().lower().startswith(("select", "show")):
-            rows = cur.fetchall()
-            columns = [desc[0] for desc in cur.description]
+            rows = cursor.fetchall()
+            columns = [desc[0] for desc in cursor.description]
             return pd.DataFrame(rows, columns=columns)
 
         elif query.strip().lower().startswith(
                 ("delete", "insert", "update", "drop", "create", "alter", "kill")
         ):
-            conn.commit()
-            return cur.rowcount
+            connection.commit()
+            return cursor.rowcount
 
         else:
             return None
 
 
-def kill_all_processes(conn):
+def kill_all_processes(connection: Connection):
     try:
-        with conn.cursor() as cursor:
+        run_query(connection, "SHOW PROCESSLIST")
+
+        with connection.cursor() as cursor:
             cursor.execute("SHOW PROCESSLIST")
             processes = cursor.fetchall()
             for process in processes:
@@ -31,7 +38,7 @@ def kill_all_processes(conn):
                 if command != 'Sleep':
                     cursor.execute(f"KILL {process_id}")
                     print(f"Killed process {process_id} (user: {user}, command: {command})")
-        conn.commit()
+        connection.commit()
 
     except Exception as e:
         print(f"Error occurred: {e}")
@@ -67,17 +74,14 @@ def print_tables_summary(conn):
 
 
 def abort_deletion_if_table_exists(connection, table_name):
-    cursor = connection.cursor()
-    cursor.execute("SHOW TABLES")
-    tables = [row[0] for row in cursor.fetchall()]
+    tables = run_query(connection, "SHOW TABLES")
     if table_name in tables:
         delete_confirmation = input(
                 f"Table '{table_name}' already exists. Do you want to dellete the table and recreate it? (y/n): "
         ).strip().lower()
         if delete_confirmation in ["y", "yes"]:
-            clear_table_query = f"DROP TABLE {table_name}"
             print(f"Deleting table '{table_name}'...")
-            cursor.execute(clear_table_query)
+            run_query(connection, f"DROP TABLE {table_name}")
         else:
             print("Aborting upload.")
             return True

@@ -2,13 +2,14 @@ import random
 
 import geopandas as gpd
 import pandas as pd
+from pymysql import Connection
 from shapely import wkt
 
 from fynesse.common.db import db
 
 
-def run_query(conn, query):
-    return db.run_query(conn, query)
+def run_query(conn, query, args, execute_many):
+    return db.run_query(conn, query, args, execute_many)
 
 
 def database_df_to_gpd(df, geometry_column_name="geometry"):
@@ -28,9 +29,9 @@ def random_sample(connection, table_name, sample_number):
 
     run_query(connection, "CREATE TEMPORARY TABLE sample_ids (id INT);")
 
-    insert_query = "INSERT INTO sample_ids (id) VALUES (%s);"
-    cursor = connection.cursor()
-    cursor.executemany(insert_query, [(i,) for i in sample_indexes])
+    run_query(connection, "INSERT INTO sample_ids (id) VALUES (%s);",
+              [(i,) for i in sample_indexes], execute_many=True
+              )
 
     sample = run_query(connection,
                        f"SELECT t.* FROM {table_name} t JOIN sample_ids s ON t.id = s.id;"
@@ -39,3 +40,7 @@ def random_sample(connection, table_name, sample_number):
     run_query(connection, "DROP TABLE sample_ids;")
 
     return sample
+
+
+def abort_deletion_if_table_exists(connection: Connection, table_name: str) -> bool:
+    return db.abort_deletion_if_table_exists(connection, table_name)
