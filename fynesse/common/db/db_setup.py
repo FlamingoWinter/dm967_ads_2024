@@ -73,7 +73,7 @@ def is_pipeline_in_progress(connection: Connection, pipeline_name: str) -> Tuple
                 """
                        )
 
-    if result and result[0]["last_pipeline_start"]:
+    if len(result) > 0 and result[0]["last_pipeline_start"]:
         last_start = result[0]["last_pipeline_start"]
         last_end = result[0]["last_pipeline_end"]
         in_progress = last_end is None or last_start > last_end
