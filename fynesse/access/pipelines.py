@@ -15,7 +15,9 @@ GET_INDICATORS_MSOA = "get_indicators_msoa"
 def restart_pipeline(connection, pipeline_name):
     create_metadata_table_if_not_exists(connection)
 
-    in_progress, last_start_time = is_pipeline_in_progress(connection, PRICE_PAID_PIPELINE)
+    in_progress, last_start_time, last_end_time = is_pipeline_in_progress(connection,
+                                                                          PRICE_PAID_PIPELINE
+                                                                          )
     if in_progress:
         print(
                 f"Pipeline {pipeline_name} is in progress, and was started at {str(last_start_time)}"
@@ -62,9 +64,12 @@ def resume_pipeline(connection, pipeline_name, progress_check=True):
     create_metadata_table_if_not_exists(connection)
 
     if progress_check:
-        in_progress, last_start_time = is_pipeline_in_progress(connection, PRICE_PAID_PIPELINE)
+        in_progress, last_start_time, last_end_time = is_pipeline_in_progress(connection,
+                                                                              PRICE_PAID_PIPELINE
+                                                                              )
         if not in_progress:
             print(f"Pipeline {pipeline_name} has not started.")
+            print(f"Or was completed at {last_end_time}")
             init_confirmation = input(f"Restart pipeline? y/n: ")
             if init_confirmation.strip().lower() in ["yes", "y"]:
                 init_pipeline(connection, pipeline_name)

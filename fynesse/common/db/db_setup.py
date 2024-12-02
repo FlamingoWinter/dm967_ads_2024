@@ -65,7 +65,7 @@ def create_metadata_table_if_not_exists(connection: Connection) -> None:
 
 
 def is_pipeline_in_progress(connection: Connection, pipeline_name: str) -> Tuple[
-    bool, Optional[datetime]]:
+    bool, Optional[datetime], Optional[datetime]]:
     result = run_query(connection, f"""
                     SELECT last_pipeline_start, last_pipeline_end
                     FROM pipeline_metadata
@@ -77,9 +77,9 @@ def is_pipeline_in_progress(connection: Connection, pipeline_name: str) -> Tuple
         last_start = result["last_pipeline_start"].values[0]
         last_end = result["last_pipeline_end"].values[0]
         in_progress = last_end is None or last_start > last_end
-        return in_progress, last_start
+        return in_progress, last_start, last_end
 
-    return False, None
+    return False, None, None
 
 
 def update_metadata_on_start_pipeline(connection: Connection, pipeline_name: str) -> None:
