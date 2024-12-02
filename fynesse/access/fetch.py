@@ -115,3 +115,4 @@ def fetch_uk_beaches():
     uk_beaches['lat'] = uk_beaches['centroid'].y
     uk_beaches['lng'] = uk_beaches['centroid'].x
     uk_beaches.drop(columns=['centroid'], inplace=True)
+    return uk_beaches

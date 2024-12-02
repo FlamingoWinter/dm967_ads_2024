@@ -19,3 +19,18 @@ def init_add_census_data(connection):
     join_in_place(connection, "oa", hours_worked_by_oa, on=["Geography_Code"])
     join_in_place(connection, "oa", commuter_distance_by_oa, on=["Geography_Code"])
     join_in_place(connection, "oa", work_type_by_oa, on=["Geography_Code"])
+
+    # -------------------------------------------------------------------------------------------------------------------
+
+    raw_work_type_by_msoa = fetch_2021_census_data('TS064', 'msoa')
+    work_type_by_msoa = clean_work_type_detailed(raw_work_type_by_msoa)
+
+    raw_hours_worked_by_msoa = fetch_2021_census_data('TS059', 'msoa')
+    hours_worked_by_msoa = clean_hours_worked(raw_hours_worked_by_msoa)
+
+    raw_commuter_distance_by_msoa = fetch_2021_census_data('TS058', 'msoa')
+    commuter_distance_by_msoa = clean_commuter_distance(raw_commuter_distance_by_msoa)
+
+    join_in_place(connection, "msoa", hours_worked_by_msoa, on=["Geography_Code"])
+    join_in_place(connection, "msoa", commuter_distance_by_msoa, on=["Geography_Code"])
+    join_in_place(connection, "msoa", work_type_by_msoa, on=["Geography_Code"])

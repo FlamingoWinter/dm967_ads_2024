@@ -46,7 +46,7 @@ def initialise_metadata_table(connection: Connection) -> None:
     run_query(connection, """
                                         CREATE TABLE pipeline_metadata (
                                             pipeline_name VARCHAR(255) PRIMARY KEY,
-                                            last_pipeline_start DATETIME NOT NULL,
+                                            last_pipeline_start DATETIME NOT NULL  DEFAULT CURRENT_TIMESTAMP,
                                             last_pipeline_end DATETIME
                                         );
                                     """
@@ -57,7 +57,7 @@ def create_metadata_table_if_not_exists(connection: Connection) -> None:
     run_query(connection, """
                                         CREATE TABLE IF NOT EXISTS pipeline_metadata (
                                             pipeline_name VARCHAR(255) PRIMARY KEY,
-                                            last_pipeline_start DATETIME NOT NULL,
+                                            last_pipeline_start DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
                                             last_pipeline_end DATETIME
                                         );
                                     """

@@ -1,3 +1,6 @@
+import re
+
+
 def clean_nssec(raw_nssec):
     nssec = raw_nssec.drop(raw_nssec.columns[[0, 3]], axis=1)
     nssec.columns = ["Geography", "Geography_Code", "L1-L3", "L4-L6", "L7", "L8-9", "L10-L11",
@@ -59,6 +62,20 @@ def clean_work_type(raw_work_type):
     return work_type
 
 
+def clean_work_type_detailed(raw_work_type_detailed):
+    def convert_column(col_name):
+        camel_case = "_".join(col_name.split(":", 1)[-1].strip().split(" ")).lower()
+        clean = re.sub(r'[^\w\s]', '', camel_case)
+        return clean[:25].rsplit("_", 1)[0] + "_" + (clean[25:].rsplit("_", 1)[-1])
+
+    work_type_detailed = raw_work_type_detailed.drop(raw_work_type_detailed.columns[[0, 3]], axis=1)
+
+    work_type_detailed.columns = ["Geography", "Geography_Code"] + [convert_column(col) for col in
+                                                                    work_type_detailed.columns][2:]
+    work_type_detailed = work_type_detailed.drop(columns=["Geography"])
+    return work_type_detailed
+
+
 def clean_commuter_distance(raw_commuter_distance):
     commuter_distance = raw_commuter_distance.drop(raw_commuter_distance.columns[[0]], axis=1)
     commuter_distance.columns = [
@@ -83,8 +100,8 @@ def clean_commuter_distance(raw_commuter_distance):
 def clean_hours_worked(raw_hours_worked):
     hours_worked = raw_hours_worked.drop(raw_hours_worked.columns[[0]], axis=1)
     hours_worked.columns = [
-            "geography",
-            "geography_code",
+            "Geography",
+            "Geography_Code",
             "hours_total_all_usual_residents",
             "hours_part_time",
             "hours_part_time_15_or_less",
