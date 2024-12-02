@@ -6,14 +6,17 @@ from pymysql import Connection
 from ..db.db import abort_deletion_if_table_exists, run_query
 
 
-def upload_to_database(connection: Connection, table_name: str, df: pd.DataFrame) -> None:
+def upload_to_database(connection: Connection, table_name: str, df: pd.DataFrame,
+                       temporary: bool = False
+                       ) -> None:
     if abort_deletion_if_table_exists(connection, table_name):
         return
 
     is_gdf = isinstance(df, gpd.GeoDataFrame)
 
+    table_type = "TEMPORARY" if temporary else ""
     create_table_query = (get_schema(df, table_name)
-                          .replace("CREATE TABLE", "CREATE TABLE IF NOT EXISTS", 1)
+                          .replace("CREATE TABLE", f"CREATE {table_type} TABLE IF NOT EXISTS", 1)
                           .replace('"', '`'))
 
     if is_gdf:
@@ -74,3 +77,35 @@ def join_tables(connection: Connection, table1: str, table2: str, on: str, joine
                                               JOIN {table2} t2 ON t1.{on} = t2.{on};
                                           """
               )
+
+
+def join_in_place(connection, table_name, df_to_join, on):
+    upload_to_database(connection, "temporary", df_to_join, temporary=True)
+
+    schema = get_schema(df_to_join, "temporary").replace('"', '`')
+
+    column_definitions = {
+            line.split('`')[1]: line.split('`')[2].strip().split()[0].rstrip(",")
+            for line in schema.split('\n') if '(' not in line and ')' not in line
+    }
+
+    for column_name, column_type in column_definitions.items():
+        if column_name not in on:
+            run_query(connection,
+                      f"ALTER TABLE {table_name} ADD COLUMN `{column_name}` {column_type}"
+                      )
+
+    on_clause = " AND ".join([f"target.{col} = temp.{col}" for col in on])
+    set_clause = ", ".join(
+            [f"target.{col} = temp.{col}" for col in df_to_join.columns if col not in on]
+    )
+
+    run_query(connection, f"""
+        UPDATE {table_name} AS target
+        JOIN temporary AS temp
+        ON {on_clause}
+        SET {set_clause}
+    """
+              )
+
+    run_query(connection, "DROP table temporary")

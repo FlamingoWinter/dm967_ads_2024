@@ -33,7 +33,10 @@ def fetch_2021_census_data(
             zip_ref.extractall(extract_dir)
 
     try:
-        return pd.read_csv(f'{extract_dir}/census2021-{code.lower()}-{level}.csv')
+        if not custom_url:
+            return pd.read_csv(f'{extract_dir}/census2021-{code.lower()}-{level}.csv')
+        filename = next(file for file in os.listdir(extract_dir) if file.endswith('.csv'))
+        return pd.read_csv(f"{extract_dir}/{filename}")
     except FileNotFoundError:
         raise FileNotFoundError(
                 f"File not found in download. Data may not exist for the {level} level"

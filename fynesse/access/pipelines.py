@@ -1,5 +1,6 @@
 from fynesse.common.db.db_setup import is_pipeline_in_progress, create_metadata_table_if_not_exists, \
     update_metadata_on_start_pipeline, update_metadata_on_end_pipeline
+from fynesse.common.pipelines.add_census_data import init_add_census_data
 from fynesse.common.pipelines.get_indicators import init_get_indicators, resume_get_indicators
 from fynesse.common.pipelines.part_1 import init_part_1
 from fynesse.common.pipelines.part_1_nssec_msoa import init_part_1_nssec_msoa
@@ -12,6 +13,7 @@ PART_1_NSSEC_MSOA_PIPELINE = "part_1_nssec_msoa"
 GET_INDICATORS_OA = "get_indicators_oa"
 GET_INDICATORS_MSOA = "get_indicators_msoa"
 POSTCODE_PIPELINE = "postcode"
+ADD_CENSUS_DATA_PIPELINE = "add_census_data"
 
 
 def restart_pipeline(connection, pipeline_name):
@@ -63,6 +65,9 @@ def init_pipeline(connection, pipeline_name):
 
     if pipeline_name == POSTCODE_PIPELINE:
         init_postcode(connection)
+
+    if pipeline_name == ADD_CENSUS_DATA_PIPELINE:
+        init_add_census_data(connection)
 
 
 def resume_pipeline(connection, pipeline_name, progress_check=True):
