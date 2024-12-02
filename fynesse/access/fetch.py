@@ -14,9 +14,14 @@ DATA_DIRECTORY = "fetched_data"
 # This was adapted from the example in practical 3
 def fetch_2021_census_data(
         code: str,
-        level: Literal['ctry', 'rgn', 'utla', 'ltla', 'msoa', 'oa'] = 'oa'
+        level: Literal['ctry', 'rgn', 'utla', 'ltla', 'msoa', 'oa'] = 'oa',
+        custom_url=None
 ) -> pd.DataFrame:
-    url = f'https://www.nomisweb.co.uk/output/census/2021/census2021-{code.lower()}.zip'
+    if custom_url is None:
+        url = f'https://www.nomisweb.co.uk/output/census/2021/census2021-{code.lower()}.zip'
+    else:
+        url = custom_url
+
     extract_dir = os.path.join(DATA_DIRECTORY, os.path.splitext(os.path.basename(url))[0])
 
     if not (os.path.exists(extract_dir) and os.listdir(extract_dir)):
