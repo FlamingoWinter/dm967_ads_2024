@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Union
+from typing import Union, Optional, Tuple
 
 import pymysql
 from pymysql import Connection
@@ -39,62 +39,68 @@ def create_connection(user: str, password: str, host: str, database: Union[str, 
     return connection
 
 
-def create_metadata_table(connection: Connection) -> None:
-    if abort_deletion_if_table_exists(connection, "upload_metadata"):
+def initialise_metadata_table(connection: Connection) -> None:
+    if abort_deletion_if_table_exists(connection, "pipeline_metadata"):
         return
 
     run_query(connection, """
-                                        CREATE TABLE upload_metadata (
+                                        CREATE TABLE pipeline_metadata (
                                             pipeline_name VARCHAR(255) PRIMARY KEY,
-                                            last_upload_time DATETIME NOT NULL
+                                            last_pipeline_start DATETIME NOT NULL,
+                                            last_pipeline_end DATETIME
                                         );
                                     """
               )
 
 
-def check_previous_pipeline(connection: Connection, pipeline_name: str,
-                            expected_minutes: int = None
-                            ) -> bool:
-    last_upload_info = run_query(connection, f"""
-                                                                            SELECT last_upload_time
-                                                                            FROM upload_metadata 
-                                                                            WHERE pipeline_name = '{pipeline_name}'
-                                                                            LIMIT 1;
-                                                                        """
-                                 )
-
-    if not last_upload_info.empty:
-        last_upload_time = last_upload_info.iloc[0]["last_upload_time"]
-    else:
-        last_upload_time = None
-
-    if last_upload_time:
-        print(f"Previous pipeline {pipeline_name} was performed on {last_upload_time}.")
-
-        if expected_minutes:
-            print(f"Pipeline is expected to take {str(expected_minutes)} minutes")
-
-        proceed_with_pipeline = input("Do you want to proceed with the pipeline? (y/n): "
-                                      ).strip().lower()
-
-        if proceed_with_pipeline in ['y', 'yes']:
-            return True
-        else:
-            print("Aborting pipeline.")
-            return False
-
-    else:
-        print("No previous evidence of pipeline run. Proceeding...")
-        return True
+def create_metadata_table_if_not_exists(connection: Connection) -> None:
+    run_query(connection, """
+                                        CREATE TABLE IF NOT EXISTS pipeline_metadata (
+                                            pipeline_name VARCHAR(255) PRIMARY KEY,
+                                            last_pipeline_start DATETIME NOT NULL,
+                                            last_pipeline_end DATETIME
+                                        );
+                                    """
+              )
 
 
-def update_metadata(connection: Connection, pipeline_name: str) -> None:
+def is_pipeline_in_progress(connection: Connection, pipeline_name: str) -> Tuple[
+    bool, Optional[datetime]]:
+    result = run_query(connection, f"""
+                    SELECT last_pipeline_start, last_pipeline_end
+                    FROM pipeline_metadata
+                    WHERE pipeline_name = '{pipeline_name}';
+                """
+                       )
+
+    if result and result[0]["last_pipeline_start"]:
+        last_start = result[0]["last_pipeline_start"]
+        last_end = result[0]["last_pipeline_end"]
+        in_progress = last_end is None or last_start > last_end
+        return in_progress, last_start
+
+    return False, None
+
+
+def update_metadata_on_start_pipeline(connection: Connection, pipeline_name: str) -> None:
     curr_time = datetime.utcnow()
 
     run_query(connection, f"""
-                                        INSERT INTO upload_metadata (pipeline_name, last_upload_time)
+                                        INSERT INTO pipeline_metadata (pipeline_name, last_pipeline_start)
                                         VALUES ('{pipeline_name}', '{curr_time}')
                                         ON DUPLICATE KEY UPDATE 
-                                            last_upload_time = '{curr_time}';
+                                            last_pipeline_start = '{curr_time}';
+                                    """
+              )
+
+
+def update_metadata_on_end_pipeline(connection: Connection, pipeline_name: str) -> None:
+    curr_time = datetime.utcnow()
+
+    run_query(connection, f"""
+                                        INSERT INTO pipeline_metadata (pipeline_name, last_pipeline_end)
+                                        VALUES ('{pipeline_name}', '{curr_time}')
+                                        ON DUPLICATE KEY UPDATE 
+                                            last_pipeline_end = '{curr_time}';
                                     """
               )

@@ -38,7 +38,7 @@ def upload_to_database(connection: Connection, table_name: str, df: pd.DataFrame
 def append_to_database(connection: Connection, table_name: str, df: pd.DataFrame) -> None:
     tables = run_query(connection, "SHOW Tables")
 
-    if table_name not in tables:
+    if table_name not in tables[tables.columns[-1]].to_list():
         upload_to_database(connection, table_name, df)
     else:
         is_gdf = isinstance(df, gpd.GeoDataFrame)

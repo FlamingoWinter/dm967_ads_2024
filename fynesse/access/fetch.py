@@ -74,3 +74,36 @@ def fetch_2021_census_geography(
     gdf = gdf.set_geometry('geometry')
 
     return gdf
+
+
+def fetch_uk_beaches():
+    # from https://overpass-turbo.eu/
+    url = "https://github.com/FlamingoWinter/ads_practicals/raw/refs/heads/main/uk-beaches.zip"
+    zip_folder = "uk-beaches.zip"
+    ext_folder = "beaches"
+
+    if not os.path.exists(ext_folder):
+        response = requests.get(url)
+        with open(zip_folder, "wb") as file:
+            file.write(response.content)
+
+        os.makedirs(ext_folder, exist_ok=True)
+        with zipfile.ZipFile(zip_folder, 'r') as zip_ref:
+            zip_ref.extractall(ext_folder)
+
+    for file in os.listdir(ext_folder):
+        if file.endswith(".geojson"):
+            geojson = os.path.join(ext_folder, file)
+            break
+
+    uk_beaches = gpd.read_file(geojson)
+
+    uk_projected_beaches = uk_beaches.to_crs("EPSG:27700")
+
+    uk_projected_beaches['centroid'] = uk_projected_beaches.geometry.centroid
+
+    uk_beaches['centroid'] = uk_projected_beaches['centroid'].to_crs("EPSG:4326")
+
+    uk_beaches['lat'] = uk_beaches['centroid'].y
+    uk_beaches['lng'] = uk_beaches['centroid'].x
+    uk_beaches.drop(columns=['centroid'], inplace=True)

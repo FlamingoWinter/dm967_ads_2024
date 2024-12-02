@@ -9,7 +9,7 @@ def run_query(connection: Connection, query: str, args=None, execute_many: bool 
     with connection.cursor() as cursor:
         cursor.execute(query, args) if not execute_many else cursor.executemany(query, args)
 
-        if query.strip().lower().startswith(("select", "show")):
+        if query.strip().lower().startswith(("select", "show", "describe")):
             rows = cursor.fetchall()
             columns = [desc[0] for desc in cursor.description]
             return pd.DataFrame(rows, columns=columns)
@@ -75,13 +75,14 @@ def print_tables_summary(conn):
 
 def abort_deletion_if_table_exists(connection, table_name):
     tables = run_query(connection, "SHOW TABLES")
-    if table_name in tables:
+    if table_name in tables[tables.columns[-1]].to_list():
         delete_confirmation = input(
                 f"Table '{table_name}' already exists. Do you want to dellete the table and recreate it? (y/n): "
         ).strip().lower()
         if delete_confirmation in ["y", "yes"]:
             print(f"Deleting table '{table_name}'...")
             run_query(connection, f"DROP TABLE {table_name}")
+            print(f"Deleted")
         else:
             print("Aborting upload.")
             return True

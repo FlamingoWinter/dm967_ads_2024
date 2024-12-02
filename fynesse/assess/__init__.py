@@ -1,3 +1,4 @@
+from . import filter
 from . import map
 from . import osm
 from . import plot
