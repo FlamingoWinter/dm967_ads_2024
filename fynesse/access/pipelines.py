@@ -10,6 +10,7 @@ PART_1_PIPELINE = "part_1"
 PART_1_NSSEC_MSOA_PIPELINE = "part_1_nssec_msoa"
 GET_INDICATORS_OA = "get_indicators_oa"
 GET_INDICATORS_MSOA = "get_indicators_msoa"
+POSTCODE_PIPELINE = "postcode"
 
 
 def restart_pipeline(connection, pipeline_name):
@@ -58,6 +59,9 @@ def init_pipeline(connection, pipeline_name):
 
     if pipeline_name == GET_INDICATORS_MSOA:
         init_get_indicators(connection, "sexual_orientation_nssec_msoa_geog", "poi_counts_msoa")
+
+    if pipeline_name == POSTCODE_PIPELINE:
+        init_postcode(connection)
 
 
 def resume_pipeline(connection, pipeline_name, progress_check=True):
