@@ -3,6 +3,7 @@ from fynesse.common.db.db_setup import is_pipeline_in_progress, create_metadata_
 from fynesse.common.pipelines.get_indicators import init_get_indicators, resume_get_indicators
 from fynesse.common.pipelines.part_1 import init_part_1
 from fynesse.common.pipelines.part_1_nssec_msoa import init_part_1_nssec_msoa
+from fynesse.common.pipelines.postcode import init_postcode
 from fynesse.common.pipelines.price_paid import init_price_paid, resume_price_paid
 
 PRICE_PAID_PIPELINE = "price_paid"
