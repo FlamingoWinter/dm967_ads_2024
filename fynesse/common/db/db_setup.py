@@ -1,6 +1,7 @@
 from datetime import datetime
 from typing import Union, Optional, Tuple
 
+import pandas as pd
 import pymysql
 from pymysql import Connection
 
@@ -72,6 +73,9 @@ def is_pipeline_in_progress(connection: Connection, pipeline_name: str) -> Tuple
                     WHERE pipeline_name = '{pipeline_name}';
                 """
                        )
+
+    result["last_pipeline_start"] = pd.to_datetime(result["last_pipeline_start"])
+    result["last_pipeline_end"] = pd.to_datetime(result["last_pipeline_end"])
 
     if len(result) > 0 and result["last_pipeline_start"].values[0]:
         last_start = result["last_pipeline_start"].values[0]

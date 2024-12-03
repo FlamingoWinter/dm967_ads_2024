@@ -116,3 +116,28 @@ def fetch_uk_beaches():
     uk_beaches['lng'] = uk_beaches['centroid'].x
     uk_beaches.drop(columns=['centroid'], inplace=True)
     return uk_beaches
+
+
+def fetch_coast():
+    # from https://overpass-turbo.eu/
+    url = "https://github.com/FlamingoWinter/ads_practicals/raw/refs/heads/main/coast.zip"
+    zip_folder = "coast.zip"
+    ext_folder = "coast"
+
+    if not os.path.exists(ext_folder):
+        response = requests.get(url)
+        with open(zip_folder, "wb") as file:
+            file.write(response.content)
+
+        os.makedirs(ext_folder, exist_ok=True)
+        with zipfile.ZipFile(zip_folder, 'r') as zip_ref:
+            zip_ref.extractall(ext_folder)
+
+    for file in os.listdir(ext_folder):
+        if file.endswith(".geojson"):
+            geojson = os.path.join(ext_folder, file)
+            break
+
+    coast = gpd.read_file(geojson)
+
+    return coast

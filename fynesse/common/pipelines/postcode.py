@@ -3,6 +3,7 @@ import zipfile
 
 import requests
 
+from fynesse.access import optimise
 from fynesse.common.db.db import run_query
 
 
@@ -41,3 +42,5 @@ def init_postcode(connection):
         LOAD DATA LOCAL INFILE "./postcodes.csv" INTO TABLE `postcode` FIELDS TERMINATED BY ',' OPTIONALLY ENCLOSED by '"' LINES STARTING BY '' TERMINATED BY "\n";
         """
                   )
+
+    optimise.add_key(connection, "postcode")

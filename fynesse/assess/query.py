@@ -12,11 +12,11 @@ def run_query(conn, query, args=None, execute_many=False):
     return db.run_query(conn, query, args, execute_many)
 
 
-def database_df_to_gpd(df, geometry_column_name="geometry"):
+def database_df_to_gpd(df, geometry_column_name="geometry", crs="EPSG:27700"):
     df[geometry_column_name] = df[geometry_column_name].apply(
             lambda x: wkt.loads(x) if pd.notnull(x) else None
     )
-    df = gpd.GeoDataFrame(df, geometry=geometry_column_name, crs="EPSG:27700")
+    df = gpd.GeoDataFrame(df, geometry=geometry_column_name, crs=crs)
     df.to_crs("EPSG:4326", inplace=True)
     return df
 

@@ -2,7 +2,7 @@ import os
 
 from dotenv import load_dotenv
 
-from fynesse.access.pipelines import restart_pipeline
+from fynesse.access.pipelines import resume_pipeline
 from fynesse.common.db.db_setup import create_connection
 
 load_dotenv()
@@ -13,7 +13,7 @@ password = os.getenv("DB_PASSWORD")
 port = int(os.getenv('DB_PORT'))
 
 connection = create_connection(user, password=password, host=url, port=port,
-                               database="ads_2024_final"
+                               database="ads_2024_part_2"
                                )
 
-restart_pipeline(connection, "postcode")
+resume_pipeline(connection, "process_postcodes")
