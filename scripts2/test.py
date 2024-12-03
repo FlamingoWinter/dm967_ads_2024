@@ -13,7 +13,7 @@ password = os.getenv("DB_PASSWORD")
 port = int(os.getenv('DB_PORT'))
 
 connection = create_connection(user, password=password, host=url, port=port,
-                               database="ads_2024_part_2"
+                               database="ads_2024_part_1"
                                )
 
-resume_pipeline(connection, "process_postcodes")
+resume_pipeline(connection, "part_1")
