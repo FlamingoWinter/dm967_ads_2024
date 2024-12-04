@@ -3,6 +3,8 @@ from fynesse.common.db.db_setup import is_pipeline_in_progress, create_metadata_
 from fynesse.common.pipelines.add_census_data import init_add_census_data
 from fynesse.common.pipelines.beach import init_beach_pipeline
 from fynesse.common.pipelines.beach_intersects_msoa import init_beach_intersects_msoa
+from fynesse.common.pipelines.create_gif_for_million_postcodes import \
+    init_create_gif_for_million_postcodes
 from fynesse.common.pipelines.get_indicators import init_get_indicators, resume_get_indicators
 from fynesse.common.pipelines.part_1 import init_part_1
 from fynesse.common.pipelines.part_1_nssec_msoa import init_part_1_nssec_msoa
@@ -26,6 +28,7 @@ BEACH_INTERSECTS_MSOA = "beach_intersects_msoa"
 PROCESS_POSTCODES = "process_postcodes"
 UPLOAD_WORK_TYPE_RELATIONS = "upload_work_type_relationships"
 RELATE_POSTCODE_PRICE_PAID_PIPELINE = "relate_postcode_price_paid"
+CREATE_GIF_FOR_MILLION_POSTCODES = "create_gif_for_million_postcodes"
 
 
 def restart_pipeline(connection, pipeline_name):
@@ -95,6 +98,9 @@ def init_pipeline(connection, pipeline_name):
 
     if pipeline_name == RELATE_POSTCODE_PRICE_PAID_PIPELINE:
         init_relate_postcode_price_paid(connection)
+
+    if pipeline_name == CREATE_GIF_FOR_MILLION_POSTCODES:
+        init_create_gif_for_million_postcodes(connection)
 
 
 def resume_pipeline(connection, pipeline_name, progress_check=True):

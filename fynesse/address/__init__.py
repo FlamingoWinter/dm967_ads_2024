@@ -1,7 +1,14 @@
+import random
+
+import matplotlib.pyplot as plt
 import osmnx as ox
 import pandas as pd
+import seaborn as sns
+from ipywidgets import interact, widgets
 
 from fynesse.assess import predict
+from fynesse.common.db.db import run_query
+from fynesse.common.db.db_index_management import add_index
 
 
 def show_feature_importance(df, features, predict_column, to_design_matrix):
@@ -104,3 +111,91 @@ def amend_df_with_indicators(df,
     df = pd.concat([df, pois_counts], axis=1)
 
     return df
+
+
+def sample_near_beaches(connection, sample_size):
+    add_index(connection, "postcode_near_beach", "postcode_id")
+    add_index(connection, "postcode_near_beach", "beach_id")
+
+    count = run_query(connection, f"SELECT COUNT(*) FROM postcode").iloc[0, 0]
+    sample_indexes = random.sample(range(count), sample_size)
+
+    run_query(connection, f"DROP Table IF EXISTS sample_ids;")
+
+    run_query(connection, "CREATE TEMPORARY TABLE sample_ids (id INT);")
+
+    run_query(connection, "INSERT INTO sample_ids (id) VALUES (%s);",
+              [(i,) for i in sample_indexes], execute_many=True
+              )
+
+    sample = run_query(connection,
+                       f"""SELECT p.postcode, pb.distance_to_beach, h.price, h.date_of_transfer, b.name, h.primary_addressable_object_name, h.secondary_addressable_object_name
+                        FROM sample_ids s
+                        JOIN postcode p ON p.id = s.id
+                        JOIN price_paid h ON p.id = h.db_id
+                        JOIN postcode_near_beach pb ON p.id = pb.postcode_id
+                        JOIN beach b ON pb.beach_id = b.id"""
+                       )
+
+    run_query(connection, "DROP TABLE sample_ids;")
+
+    return sample
+
+
+def sample_not_near_beaches(connection, sample_size):
+    count = run_query(connection, f"SELECT COUNT(*) FROM postcode").iloc[0, 0]
+    sample_indexes = random.sample(range(count), sample_size)
+
+    run_query(connection, f"DROP Table IF EXISTS sample_ids;")
+
+    run_query(connection, "CREATE TEMPORARY TABLE sample_ids (id INT);")
+
+    run_query(connection, "INSERT INTO sample_ids (id) VALUES (%s);",
+              [(i,) for i in sample_indexes], execute_many=True
+              )
+
+    not_beach_houses = run_query(connection,
+                                 f"""
+    SELECT p.postcode, h.price, h.date_of_transfer, h.primary_addressable_object_name, h.secondary_addressable_object_name
+    FROM sample_ids s
+    JOIN postcode p ON p.id = s.id
+    JOIN price_paid h ON p.id = h.db_id
+    LEFT JOIN postcode_near_beach pb ON p.id = pb.postcode_id
+    WHERE pb.postcode_id IS NULL;
+                                       """
+                                 )
+    run_query(connection, "DROP TABLE sample_ids;")
+
+    return not_beach_houses
+
+
+def render_interactive_distribution_graph(df_beach, df_not_beach):
+    def update_kde(distance_range):
+        min_distance, max_distance = distance_range - 50, distance_range
+        filtered_data = df_beach[
+            (df_beach['distance_to_beach'] >= min_distance) & (
+                        df_beach['distance_to_beach'] <= max_distance)
+            ]['price']
+
+        plt.figure(figsize=(10, 6))
+
+        if len(filtered_data) > 1:
+            sns.kdeplot(filtered_data, fill=True, color="blue", alpha=0.5, gridsize=2000)
+            sns.kdeplot(df_not_beach['price'], fill=True, color="blue", alpha=0.5,
+                        gridsize=2000
+                        )
+            plt.title(f"Distance to Beach: {min_distance}m - {max_distance}m)")
+            plt.xlabel("Price")
+            plt.xlim(0, 2_000_000)
+            plt.ylabel("Density")
+            plt.grid(True)
+            plt.ylim(0, 8e-6)
+        else:
+            plt.text(0.5, 0.5, "No Data", horizontalalignment='center', verticalalignment='center')
+        plt.show()
+
+    range_slider = widgets.IntSlider(value=(500), min=50, max=1000, step=50,
+                                     description='distance_to_beach'
+                                     )
+
+    interact(update_kde, distance_range=range_slider)

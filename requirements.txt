@@ -17,3 +17,5 @@ osmnx~=2.0.0
 shapely~=2.0.6
 numpy~=2.1.3
 statsmodels~=0.14.4
+pillow~=11.0.0
+ipywidgets~=8.1.5
