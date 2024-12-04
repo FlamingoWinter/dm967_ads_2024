@@ -10,6 +10,7 @@ from fynesse.common.pipelines.postcode import init_postcode
 from fynesse.common.pipelines.price_paid import init_price_paid, resume_price_paid
 from fynesse.common.pipelines.process_postcode import init_process_postcodes, \
     resume_process_postcodes
+from fynesse.common.pipelines.relate_postcode_price_paid import init_relate_postcode_price_paid
 from fynesse.common.pipelines.upload_work_type_relationships import \
     init_upload_work_type_relationships
 
@@ -24,6 +25,7 @@ BEACH_PIPELINE = "beach"
 BEACH_INTERSECTS_MSOA = "beach_intersects_msoa"
 PROCESS_POSTCODES = "process_postcodes"
 UPLOAD_WORK_TYPE_RELATIONS = "upload_work_type_relationships"
+RELATE_POSTCODE_PRICE_PAID_PIPELINE = "relate_postcode_price_paid"
 
 
 def restart_pipeline(connection, pipeline_name):
@@ -90,6 +92,9 @@ def init_pipeline(connection, pipeline_name):
 
     if pipeline_name == UPLOAD_WORK_TYPE_RELATIONS:
         init_upload_work_type_relationships(connection)
+
+    if pipeline_name == RELATE_POSTCODE_PRICE_PAID_PIPELINE:
+        init_relate_postcode_price_paid(connection)
 
 
 def resume_pipeline(connection, pipeline_name, progress_check=True):
