@@ -2,6 +2,7 @@ import random
 from typing import Union
 
 import matplotlib.pyplot as plt
+import numpy as np
 import osmnx as ox
 import pandas as pd
 import seaborn as sns
@@ -245,4 +246,32 @@ def get_areas_with_and_without_beaches(connection, level: Union["oa", "msoa"]):
     if level == "msoa":
         return msoa_to_proportions(areas_with_beach), msoa_to_proportions(areas_without_beach)
     return None
+
+def plot_jobs_msoa(msoas_with_beach_averages, msoas_without_beach_averages, job_columns):
+
+  width = 0.35
+
+  batch_size = 10
+  num_batches = len(job_columns) // batch_size + (1 if len(job_columns) % batch_size != 0 else 0)
+
+  fig, axes = plt.subplots(num_batches, 1, figsize=(12, 64))
+
+
+  for batch_idx in range(num_batches):
+      start = batch_idx * batch_size
+      end = min(start + batch_size, len(job_columns))
+      batch_columns = job_columns[start:end]
+
+      x = np.arange(len(batch_columns))
+      ax = axes[batch_idx]
+
+      ax.bar(x - width/2, msoas_with_beach_averages[batch_columns], width, label="With Beaches", color="skyblue")
+
+      ax.bar(x + width/2, msoas_without_beach_averages[batch_columns], width, label="Without Beaches", color="orange")
+      ax.set_ylim(0, 0.07)
+      ax.set_xticks(x)
+      ax.set_xticklabels(batch_columns, rotation=45, ha="right")
+      ax.set_ylabel("Count")
+      ax.legend()
+      plt.tight_layout()
 
