@@ -232,7 +232,7 @@ def get_areas_with_and_without_beaches(connection, level: Union["oa", "msoa"]):
     SELECT
         *
     FROM {level} a
-    LEFT JOIN beach_intersects_msoa b ON a.id = b.{level}_id;
+    LEFT JOIN beach_intersects_{level} b ON a.id = b.{level}_id;
     """)
 
     areas_with_beach = areas[areas['beach_id'].notnull()]
