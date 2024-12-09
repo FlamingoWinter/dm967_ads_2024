@@ -3,6 +3,7 @@ import geopandas as gpd
 from fynesse.access.upload import upload_to_database
 from fynesse.assess.query import database_df_to_gpd
 from fynesse.common.db.db import run_query
+from fynesse.common.db.db_index_management import add_index
 
 
 def init_beach_intersects_msoa(connection):
@@ -32,3 +33,7 @@ def init_beach_intersects_msoa(connection):
     upload_to_database(connection, "beach_intersects_msoa",
                        beaches_with_msoa[["beach_id", "msoa_id"]]
                        )
+    add_index(connection, "beach_intersects_oa", "oa_id")
+    add_index(connection, "beach_intersects_oa", "beach_id")
+    add_index(connection, "beach_intersects_msoa", "msoa_id")
+    add_index(connection, "beach_intersects_msoa", "beach_id")

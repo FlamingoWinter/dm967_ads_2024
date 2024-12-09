@@ -1,4 +1,5 @@
 import random
+from typing import Union
 
 import matplotlib.pyplot as plt
 import osmnx as ox
@@ -199,3 +200,49 @@ def render_interactive_distribution_graph(df_beach, df_not_beach):
                                      )
 
     interact(update_kde, distance_range=range_slider)
+
+def msoa_to_proportions(msoas):
+  job_columns = [col for col in msoas.columns if col[0].isdigit()]
+  hours_columns = [col for col in msoas.columns if col.startswith("hours_") and any(char.isdigit() for char in col)]
+  dist_columns = [col for col in msoas.columns if col.startswith("dist_") and col != "dist_total_all_usual_residents"]
+
+  msoas['job_total'] = msoas[job_columns].sum(axis=1)
+
+  msoas[job_columns] = msoas[job_columns].div(msoas['job_total'], axis=0)
+  msoas[hours_columns] = msoas[hours_columns].div(msoas['dist_total_all_usual_residents'], axis=0)
+  msoas[dist_columns] = msoas[dist_columns].div(msoas['hours_total_all_usual_residents'], axis=0)
+  return msoas
+
+def oa_to_proportions(oas):
+  hours_columns = [col for col in oas.columns if col.startswith("hours_") and any(char.isdigit() for char in col)]
+  dist_columns = [col for col in oas.columns if col.startswith("dist_") and col != "dist_total_all_usual_residents"]
+  job_columns = ['managers_directors_senior_officials', 'professional', 'associate_professional_technical', 'administrative_secretarial', 'skilled_trades',
+                 'caring_leisure_other_service', 'sales_customer_service', 'process_plant_machine_operatives', 'elementary']
+
+
+  oas['job_total'] = oas[job_columns].sum(axis=1)
+
+  oas[job_columns] = oas[job_columns].div(oas['job_total'], axis=0)
+  oas[hours_columns] = oas[hours_columns].div(oas['dist_total_all_usual_residents'], axis=0)
+  oas[dist_columns] = oas[dist_columns].div(oas['hours_total_all_usual_residents'], axis=0)
+  return oas
+
+def get_areas_with_and_without_beaches(connection, level: Union["oa", "msoa"]):
+    areas = run_query(connection, f"""
+    SELECT
+        *
+    FROM {level} a
+    LEFT JOIN beach_intersects_msoa b ON a.id = b.{level}_id;
+    """)
+
+    areas_with_beach = areas[areas['beach_id'].notnull()]
+    areas_with_beach = areas_with_beach.groupby('Geography_Code').first().reset_index()
+
+    areas_without_beach = areas[areas['beach_id'].isnull()]
+    areas_without_beach = areas_without_beach.groupby('Geography_Code').first().reset_index()
+    if level == "oa":
+        return oa_to_proportions(areas_with_beach), oa_to_proportions(areas_without_beach)
+    if level == "msoa":
+        return msoa_to_proportions(areas_with_beach), msoa_to_proportions(areas_without_beach)
+    return None
+
