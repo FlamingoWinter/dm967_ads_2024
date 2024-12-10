@@ -345,7 +345,7 @@ def plot_jobs_with_and_without_beach_oa(oas_with_beach, oas_without_beach):
     plt.tight_layout()
 
 
-def plot_job_info_with_and_without_beach_msoa(oas_with_beach, oas_without_beach):
+def plot_job_info_with_and_without_beach_oa(oas_with_beach, oas_without_beach):
     fig, axes = plt.subplots(2, 1, figsize=(35, 20))
     hours_columns = [col for col in oas_with_beach.columns if
                      col.startswith("hours_") and any(char.isdigit() for char in col)]
