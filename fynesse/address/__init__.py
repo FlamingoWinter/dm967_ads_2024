@@ -419,7 +419,7 @@ def plot_hours_worked_by_detailed_work_type(connection):
 
 
 def plot_distance_travelled_by_detailed_work_type(connection):
-    df = run_query(connection, "SELECT * FROM hours_worked_by_detailed_work_type")
+    df = run_query(connection, "SELECT * FROM distance_travelled_by_work_type")
 
     df['est_average_distance'] = (
                                          df['distance_less_than_5km'] * 2.5 +
