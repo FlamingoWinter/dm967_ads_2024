@@ -408,13 +408,12 @@ def plot_hours_worked_by_detailed_work_type(connection):
         x = np.arange(len(rows))
         ax = axes[batch_idx]
 
-        ax.bar(x, rows["est_average_hours"], width, label="With Beaches", color="skyblue")
+        ax.bar(x, rows["est_average_hours"], width, color="skyblue")
 
         ax.set_ylim(0, 45)
         ax.set_xticks(x)
         ax.set_xticklabels(rows["occupation"], rotation=45, ha="right")
         ax.set_ylabel("Average Hours")
-        ax.legend()
         plt.tight_layout()
 
 
@@ -454,13 +453,12 @@ def plot_distance_travelled_by_detailed_work_type(connection):
         x = np.arange(len(rows))
         ax = axes[batch_idx]
 
-        ax.bar(x, rows["est_average_distance"], width, label="With Beaches", color="skyblue")
+        ax.bar(x, rows["est_average_distance"], width, color="skyblue")
 
         ax.set_ylim(0, 80)
         ax.set_xticks(x)
         ax.set_xticklabels(rows["occupation"], rotation=45, ha="right")
         ax.set_ylabel("Average Distance")
-        ax.legend()
         plt.tight_layout()
 
 
@@ -482,13 +480,12 @@ def plot_hours_worked_by_work_type(connection):
     x = np.arange(len(job_columns))
 
     width = 0.9
-    axes.bar(x, df["est_average_hours"][1:], width, label="With Beaches", color="skyblue")
+    axes.bar(x, df["est_average_hours"][1:], width, color="skyblue")
 
     axes.set_ylim(0, 45)
     axes.set_xticks(x)
     axes.set_xticklabels(job_columns, rotation=45, ha="right")
     axes.set_ylabel("Average Hours")
-    axes.legend()
     plt.tight_layout()
 
 
@@ -523,11 +520,10 @@ def plot_distance_travelled_by_work_type(connection):
     x = np.arange(len(job_columns))
 
     width = 0.9
-    axes.bar(x, df["est_average_distance"][1:], width, label="With Beaches", color="skyblue")
+    axes.bar(x, df["est_average_distance"][1:], width, color="skyblue")
 
     axes.set_ylim(0, 100)
     axes.set_xticks(x)
     axes.set_xticklabels(job_columns, rotation=45, ha="right")
     axes.set_ylabel("Average Distance")
-    axes.legend()
     plt.tight_layout()
