@@ -252,7 +252,7 @@ def get_areas_with_and_without_beaches(connection, level: Union["oa", "msoa"]):
     return None
 
 
-def plot_jobs_with_and_without_beach_msoa(msoas_with_beach, msoas_without_beach, job_columns):
+def plot_jobs_with_and_without_beach_msoa(msoas_with_beach, msoas_without_beach):
     job_columns = [col for col in msoas_with_beach.columns if col[0].isdigit()]
 
     msoas_without_beach_averages = msoas_without_beach[job_columns].mean()
