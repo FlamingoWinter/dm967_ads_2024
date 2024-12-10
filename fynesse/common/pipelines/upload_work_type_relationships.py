@@ -7,12 +7,14 @@ def init_upload_work_type_relationships(connection):
     url = "https://github.com/FlamingoWinter/ads_practicals/raw/refs/heads/main/hours_worked_by_detailed_work_type.csv"
     raw_hours_worked_by_detailed_work_type = pd.read_csv(url)
 
+
     hours_worked_by_detailed_work_type = raw_hours_worked_by_detailed_work_type.pivot_table(
             index=["Occupation (current) (105 categories) Code",
                    "Occupation (current) (105 categories)"],
             columns="Hours worked (5 categories)",
             values="Observation",
-            aggfunc="first"
+            aggfunc="first",
+            fill_value = 0
     ).reset_index()
 
     hours_worked_by_detailed_work_type = hours_worked_by_detailed_work_type.reset_index(drop=True)
@@ -105,8 +107,8 @@ def init_upload_work_type_relationships(connection):
                        )
     upload_to_database(connection, "hours_worked_by_work_type", hours_worked_by_work_type)
     upload_to_database(connection, "distance_travelled_by_detailed_work_type",
-                       hours_worked_by_detailed_work_type
+                       distance_travelled_by_detailed_work_type
                        )
     upload_to_database(connection, "distance_travelled_by_work_type",
-                       hours_worked_by_work_type
+                       distance_travelled_by_work_type
                        )
